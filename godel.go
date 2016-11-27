@@ -39,7 +39,7 @@ type Godel struct {
   AccessToken string
   RefreshToken string
   DistinctID string
-  Location LocationResponse
+  Location Location
 }
 
 //NewClient create a new Godel Client, if no deviceuid is given a random one will be created
@@ -149,12 +149,12 @@ func (g *Godel) post(endpoint string, payload interface{}) *grequests.Response {
 //GetRequestToken sends user location and deviceUID to get a request token
 func (g *Godel) GetRequestToken(city string, country string, lat float64, lng float64) (err error) {
 
-  location := LocationResponse{
+  location := Location{
     19,
     city,
     country,
     city,
-    LocationCoordinates{
+    Coordinates{
       lat,
       lng,
     },
@@ -280,9 +280,9 @@ func (g *Godel) GetMyVotedPosts() []SinglePostResponse  {
 }
 
 //GetMyPostsCombo returns a list of your last posts, your votes and comments
-func (g *Godel) GetMyPostsCombo() ComboPosts  {
+func (g *Godel) GetMyPostsCombo() ComboPostsResponse  {
   response := g.get("posts/mine/combo", nil)
-  post := ComboPosts{}
+  post := ComboPostsResponse{}
   response.JSON(&post)
 
   return post
@@ -316,7 +316,7 @@ func (g *Godel) DeletePost(postid string) bool {
 //UpvotePost upvote a selected Post
 func (g *Godel) UpvotePost(postid string) SinglePostResponse  {
   response := g.put("posts/"+postid+"/upvote", nil)
-  post := VoteResponse{}
+  post := voteResponse{}
   response.JSON(&post)
 
   return post.Post
@@ -325,7 +325,7 @@ func (g *Godel) UpvotePost(postid string) SinglePostResponse  {
 //DownvotePost upvote a selected Post
 func (g *Godel) DownvotePost(postid string) SinglePostResponse  {
   response := g.put("posts/"+postid+"/downvote", nil)
-  post := VoteResponse{}
+  post := voteResponse{}
   response.JSON(&post)
 
   return post.Post
@@ -371,14 +371,14 @@ func (g *Godel) SendReply(postid, message, color string) SinglePostResponse {
 }
 
 //SendUserLocation can be used to change the location withouth the need to relogin
-func (g *Godel) SendUserLocation(city string, country string, lat, lng float64) LocationResponse {
+func (g *Godel) SendUserLocation(city string, country string, lat, lng float64) Location {
 
-  loc := LocationResponse{
+  loc := Location{
     19,
     city,
     country,
     city,
-    LocationCoordinates{
+    Coordinates{
       lat,
       lng,
     },

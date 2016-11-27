@@ -1,7 +1,5 @@
 package godel
 
-//TODO: restructure this file and rename some structs to be more clear ex: LocationCoordinates => Coordinates etc..
-
 // LoginResponse holds the login response from the Server
 type LoginResponse struct {
   AccessToken string `json:"access_token"`
@@ -26,7 +24,7 @@ type SingleComment struct {
   Discovered int64 `json:"discovered"` // unknown
   DiscoveredBy int64 `json:"discovered_by"` // unknown
   Distance int64 `json:"distance"` // distance to current location
-  Location LocationResponse `json:"location"` //Location struct
+  Location Location `json:"location"` //Location struct
   Message string `json:"message"` // the message
   ParentCreator int64 `json:"parent_creator"` // 1 if reply is from OJ else 0
   PostID string `json:"post_id"` // the unique postID
@@ -38,91 +36,91 @@ type SingleComment struct {
 
 // SinglePostResponse holds the response for one single Post
 type SinglePostResponse struct {
-  ChildCount int64 `json:"child_count"`
-  Children []SingleComment `json:"children"`
+  ChildCount int64 `json:"child_count"` // count of replys
+  Children []SingleComment `json:"children"` // list of replys
   Color string `json:"color"` // HEX Color of the post
   CreatedAt string `json:"created_at"` // ISO Timestamp
   Discovered int64 `json:"discovered"` // unknown
   DiscoveredBy int64 `json:"discovered_by"` // unknown
   Distance int64 `json:"distance"` // distance to current location
   GotThanks bool `json:"got_thanks"` // bool
-  Location LocationResponse `json:"location"`
-  Message string `json:"message"`
-  NotificationsEnabled bool `json:"notifications_enabled"`
-  PinCount int64 `json:"pin_count"`
-  PostID string `json:"post_id"`
-  PostOwn string `json:"post_own"`
-  // Tags
-  UpdatedAt string `json:"updated_at"`
-  UserHandle string `json:"user_handle"`
-  VoteCount int64 `json:"vote_count"`
+  Location Location `json:"location"` // Location
+  Message string `json:"message"` // the message
+  NotificationsEnabled bool `json:"notifications_enabled"` // notifications for new replys
+  PinCount int64 `json:"pin_count"` // how many pins
+  PostID string `json:"post_id"` // the unique postID
+  PostOwn string `json:"post_own"` // own if own post else friend
+  UpdatedAt string `json:"updated_at"` // ISO Timestamp
+  UserHandle string `json:"user_handle"` // the user handle of the poster
+  VoteCount int64 `json:"vote_count"` // how many upvotes
+  Voted string `json:"voted"` // if voted then up or down
 }
 
 // SendLocationRequest is used to set a new Location for a user
 type SendLocationRequest struct {
-  Location LocationResponse `json:"location"`
+  Location Location `json:"location"` // Location struct
 }
 
 // NewPost can be used to create a new Post
 type NewPost struct {
-  Color string `json:"color"`
-  Location LocationResponse `json:"location"`
-  Message string `json:"message"`
+  Color string `json:"color"` // HEX Color of the post
+  Location Location `json:"location"` // Location struct
+  Message string `json:"message"` // the message
 }
 
-//LocationCoordinates hold Latitude and Longitude of the current location
-type LocationCoordinates struct {
-  Lat float64 `json:"lat"`
-  Lng float64 `json:"lng"`
+//Coordinates hold Latitude and Longitude of the current location
+type Coordinates struct {
+  Lat float64 `json:"lat"` // Latitude
+  Lng float64 `json:"lng"` // Longitude
 }
 
-//LocationResponse Holds the users current Location
-type LocationResponse struct {
-  LocAccuracy float64 `json:"loc_accuracy"`
-  City string `json:"city"`
-  Country string `json:"country"`
-  Name string `json:"name"`
-  LocCoordinates LocationCoordinates `json:"loc_coordinates"`
+//Location Holds the users current Location
+type Location struct {
+  LocAccuracy float64 `json:"loc_accuracy"` // accuracy this is randomly generated
+  City string `json:"city"` // Name of the City
+  Country string `json:"country"` // ISO Country Code (DE for Germany)
+  Name string `json:"name"` // Name of the City
+  LocCoordinates Coordinates `json:"loc_coordinates"` // Coordinates struct
 }
 
 //LoginPayload is used to log the user in
 type LoginPayload struct {
-  ClientID string `json:"client_id"`
-  DeviceUID string `json:"device_uid"`
-  Location LocationResponse `json:"location"`
+  ClientID string `json:"client_id"` // the clientID this is set per jodel app version
+  DeviceUID string `json:"device_uid"` // the DeviceUID is used to identify the user
+  Location Location `json:"location"` // Location struct
 }
 
-//VoteResponse ...
-type VoteResponse struct {
-  Post SinglePostResponse `json:"name"`
+//voteResponse ...
+type voteResponse struct {
+  Post SinglePostResponse `json:"post"`
   VoteCount int64 `json:"vote_count"`
 }
 
-//VoteResponse ...
+//ReplyToPost is used to reply to a post
 type ReplyToPost struct {
-  Ancestor string `json:"ancestor"`
-  Color string `json:"color"`
-  Location LocationResponse `json:"location"`
-  Message string `json:"message"`
+  Ancestor string `json:"ancestor"` // parent post id
+  Color string `json:"color"` // HEX color of the post
+  Location Location `json:"location"` // Location
+  Message string `json:"message"` // the message
 }
 
-//ComboPosts ...
-type ComboPosts struct {
+//ComboPostsResponse ...
+type ComboPostsResponse struct {
   Max int64 `json:"max"`
-  Recent []SinglePostResponse `json:"recent"`
-  Replied []SinglePostResponse `json:"replied"`
-  Voted []SinglePostResponse `json:"voted"`
+  Recent []SinglePostResponse `json:"recent"` // your most recent posts
+  Replied []SinglePostResponse `json:"replied"` // your most replied posts
+  Voted []SinglePostResponse `json:"voted"` // your most voted posts
 }
 
 //Pagination ...
 type Pagination struct {
-  Skip int64 `json:"skip"`
-  Limit int64 `json:"limit"`
+  Skip int64 `json:"skip"` // aka offset
+  Limit int64 `json:"limit"` // limit to x posts
 }
 
-//Karma holds the users Karma
+//KarmaResponse holds the users Karma
 type KarmaResponse struct {
-  Karma int64 `json:"karma"`
+  Karma int64 `json:"karma"` // your karma
 }
 
 //NewAccessTokenRequest is used to request a new AccessToken
