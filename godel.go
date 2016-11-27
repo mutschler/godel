@@ -46,7 +46,7 @@ type Godel struct {
 func NewClient(deviceuid string) (_ *Godel) {
   uid := NewDeviceUID()
   //TODO: fix this: if empty generate new Device!!!
-  if (deviceuid != "") {
+  if deviceuid != "" {
     uid = deviceuid
   }
   return &Godel{
@@ -70,138 +70,31 @@ func signRequest(body, url, auth, method string) (hmacresult, ts string) {
   parameters := ""
   message := method + "%" + "api.go-tellm.com" + "%" + "443" + "%/api/v2/" + url + "%" + auth + "%" + timestamp + "%" + parameters + "%" + body
 
-  fmt.Println(message)
+  // fmt.Println(message)
 
   mac := hmac.New(sha1.New, []byte("aPLFAjyUusVPHgcgvlAxihthmRaiuqCjBsRCPLan"))
 	mac.Write([]byte(message))
 	expectedMAC := mac.Sum(nil)
   hash := fmt.Sprintf("%x", expectedMAC)
   return hash, timestamp
-  // return base64.StdEncoding.EncodeToString(expectedMAC), timestamp
-  // return "1f8b08200519d33ee62f9c7e50893e43dac8cdf7", timestamp
 }
 
-// TODO: requests could be merged to one func which just calls get, put, post depending on modes less redundant! and all requests get signed
-// Internal get function
-// func (g *Godel) get(endpoint string) *grequests.Response {
-//   ro := &grequests.RequestOptions{
-//     UserAgent: "Jodel/4.28.1 Dalvik/2.1.0 (Linux; U; Android 6.0.1; Nexus 5 Build/MMB29V)",
-//     Headers: map[string]string{"Connection": "keep-alive","Content-Type": "application/json; charset=UTF-8","Authorization": "Bearer " + g.AccessToken},
-//     DisableCompression: false,
-//   }
-//   url := fmt.Sprintf("https://api.go-tellm.com/api/v2/%s", endpoint)
-//   resp, err := grequests.Get(url, ro)
-//   // You can modify the request by passing an optional RequestOptions struct
-//
-//   if err != nil {
-//       fmt.Println("Unable to make request: ", err)
-//   }
-//   // fmt.Println(resp.String())
-//   fmt.Println(resp.StatusCode)
-//   fmt.Println(resp.String())
-//   fmt.Println(resp.Header)
-//   return resp
-// }
-func (g *Godel) get(endpoint string, payload interface{}) *grequests.Response {
-  ro := &grequests.RequestOptions{
-    UserAgent: "Jodel/4.28.1 Dalvik/2.1.0 (Linux; U; Android 6.0.1; Nexus 5 Build/MMB29V)",
-    Headers: map[string]string{"Connection": "keep-alive","Content-Type": "application/json; charset=UTF-8","Authorization": "Bearer " + g.AccessToken},
-    DisableCompression: false,
-    JSON: payload,
-  }
+//sendRequest handles all sorts of request to the jodel api
+func (g *Godel) sendRequest(endpoint string, parameters interface{}, payload interface{}, method string) *grequests.Response {
   url := fmt.Sprintf("https://api.go-tellm.com/api/v2/%s", endpoint)
 
-  // if (queryParams) {
-	// 		queryParams = queryParams ? queryParams : {};
-	// 		queryParams = humps.decamelizeKeys(queryParams);
-  //
-	// 		qs = querystring.stringify(queryParams);
-	// 		if (qs && qs.length > 0) {
-	// 			if (!url.endsWith("?"))
-	// 				url += "?";
-	// 			url += qs;
-	// 		}
-	// 	}
-
-  if(payload != nil) {
-    params, _ := query.Values(payload)
+  if(parameters != nil) {
+    params, _ := query.Values(parameters)
     url = url + "?" + strings.ToLower(params.Encode())
   }
 
-  fmt.Println(url)
-
-  resp, err := grequests.Get(url, ro)
-  // You can modify the request by passing an optional RequestOptions struct
-
+  payloadString, err := json.Marshal(payload)
   if err != nil {
-      fmt.Println("Unable to make request: ", err)
-  }
-  // fmt.Println(resp.String())
-  fmt.Println(resp.StatusCode)
-  fmt.Println(resp.String())
-  fmt.Println(resp.Header)
-  return resp
-}
-
-func (g *Godel) put(endpoint string, payload interface{}) *grequests.Response {
-  ro := &grequests.RequestOptions{
-    UserAgent: "Jodel/4.28.1 Dalvik/2.1.0 (Linux; U; Android 6.0.1; Nexus 5 Build/MMB29V)",
-    Headers: map[string]string{"Connection": "keep-alive","Content-Type": "application/json; charset=UTF-8","Authorization": "Bearer " + g.AccessToken},
-    DisableCompression: false,
-    JSON: payload,
-  }
-  url := fmt.Sprintf("https://api.go-tellm.com/api/v2/%s", endpoint)
-  fmt.Println(url)
-  resp, err := grequests.Put(url, ro)
-  // You can modify the request by passing an optional RequestOptions struct
-
-  if err != nil {
-      fmt.Println("Unable to make request: ", err)
+      fmt.Println("error ", err)
   }
 
-  fmt.Println(resp.StatusCode)
-  fmt.Println(resp.String())
-  fmt.Println(resp.Header)
-
-  fmt.Println(resp.String())
-  return resp
-}
-
-func (g *Godel) delete(endpoint string, payload interface{}) *grequests.Response {
-  ro := &grequests.RequestOptions{
-    UserAgent: "Jodel/4.28.1 Dalvik/2.1.0 (Linux; U; Android 6.0.1; Nexus 5 Build/MMB29V)",
-    Headers: map[string]string{"Connection": "keep-alive","Content-Type": "application/json; charset=UTF-8","Authorization": "Bearer " + g.AccessToken},
-    DisableCompression: false,
-    JSON: payload,
-  }
-  url := fmt.Sprintf("https://api.go-tellm.com/api/v2/%s", endpoint)
-  fmt.Println(url)
-  resp, err := grequests.Delete(url, ro)
-  // You can modify the request by passing an optional RequestOptions struct
-
-  if err != nil {
-      fmt.Println("Unable to make request: ", err)
-  }
-
-  fmt.Println(resp.StatusCode)
-  fmt.Println(resp.String())
-  fmt.Println(resp.Header)
-
-  fmt.Println(resp.String())
-  return resp
-}
-
-// Internal post function
-func (g *Godel) post(endpoint string, payload interface{}) *grequests.Response {
-
-  out, err := json.Marshal(payload)
-  if err != nil {
-      panic (err)
-  }
-
-  fmt.Println(g.AccessToken)
-
-  hmac, timestamp := signRequest(string(out), endpoint, g.AccessToken, "POST")
+  //sign the request using stringified request and hmac
+  hmac, timestamp := signRequest(string(payloadString), endpoint, g.AccessToken, method)
 
   ro := &grequests.RequestOptions{
     UserAgent: "Jodel/4.28.1 Dalvik/2.1.0 (Linux; U; Android 5.1.1; D6503 Build/23.4.A.1.232)",
@@ -210,9 +103,21 @@ func (g *Godel) post(endpoint string, payload interface{}) *grequests.Response {
     JSON: payload,
   }
 
-  // resp, err := grequests.Post("http://httpbin.org/post", ro)
-  url := fmt.Sprintf("https://api.go-tellm.com/api/v2/%s", endpoint)
-  resp, err := grequests.Post(url, ro)
+  var resp *grequests.Response
+
+  switch method {
+    case "POST":
+      resp, err = grequests.Post(url, ro)
+    case "GET":
+      resp, err = grequests.Get(url, ro)
+    case "PUT":
+      resp, err = grequests.Put(url, ro)
+    case "DELETE":
+      resp, err = grequests.Put(url, ro)
+    default:
+      resp, err = grequests.Get(url, ro)
+  }
+
   if err != nil {
       fmt.Println("Unable to make request: ", err)
   }
@@ -220,18 +125,28 @@ func (g *Godel) post(endpoint string, payload interface{}) *grequests.Response {
   fmt.Println(resp.StatusCode)
   fmt.Println(resp.String())
   fmt.Println(resp.Header)
-  //
-  // x := LoginResponse{}
-  // resp.JSON(&x)
-  //
-  // resp.DownloadToFile("test.txt")
-
   return resp
 }
 
+func (g *Godel) get(endpoint string, parameters interface{}) *grequests.Response {
+  return g.sendRequest(endpoint, parameters, nil, "GET")
+}
 
-//GetRequestToken is the login function
-//TODO: rename this
+func (g *Godel) put(endpoint string, payload interface{}) *grequests.Response {
+  return g.sendRequest(endpoint, nil, payload, "PUT")
+}
+
+func (g *Godel) delete(endpoint string, payload interface{}) *grequests.Response {
+  return g.sendRequest(endpoint, nil, payload, "DELETE")
+}
+
+// Internal post function
+func (g *Godel) post(endpoint string, payload interface{}) *grequests.Response {
+  return g.sendRequest(endpoint, nil, payload, "POST")
+}
+
+
+//GetRequestToken sends user location and deviceUID to get a request token
 func (g *Godel) GetRequestToken(city string, country string, lat float64, lng float64) (err error) {
 
   location := LocationResponse{
@@ -252,21 +167,20 @@ func (g *Godel) GetRequestToken(city string, country string, lat float64, lng fl
   }
 
   response := g.post("users/", login)
-  // result := g.post("/users/", payload)
   x := LoginResponse{}
   response.JSON(&x)
-  fmt.Println(x)
-  g.Location = location
-  g.AccessToken = x.AccessToken
-  g.DistinctID = x.DistinctID
-  g.RefreshToken = x.RefreshToken
+
   if(x.AccessToken != "" && response.Ok) {
+    g.Location = location
+    g.AccessToken = x.AccessToken
+    g.DistinctID = x.DistinctID
+    g.RefreshToken = x.RefreshToken
     return nil
   }
   return nil
 }
 
-//GetNewAccessToken refreshs the access token
+//GetNewAccessToken refresh the access token
 func (g *Godel) GetNewAccessToken() {
   data := NewAccessTokenRequest{
     clientID,
@@ -278,15 +192,12 @@ func (g *Godel) GetNewAccessToken() {
   token := NewAccessTokenResonse{}
   response.JSON(&token)
 
-  g.AccessToken = token.AccessToken
+  if response.Ok {
+    g.AccessToken = token.AccessToken
+  }
 }
 
-//NewDeviceUID returns a new DeviceUID. Use this or create your own...
-func (g *Godel) NewDeviceUID() string {
-  return NewDeviceUID()
-}
-
-//GetMostRecentPosts get new Posts for current location
+//GetMostRecentPosts get the most recent posts for the current location
 func (g *Godel) GetMostRecentPosts() []SinglePostResponse {
   response := g.get("posts/location/", nil)
   posts := LatestPostsResponse{}
@@ -295,7 +206,7 @@ func (g *Godel) GetMostRecentPosts() []SinglePostResponse {
   return posts.Posts
 }
 
-//GetMostPopularPosts get top posts for current location
+//GetMostPopularPosts get most popular posts for the current location
 func (g *Godel) GetMostPopularPosts() []SinglePostResponse  {
   response := g.get("posts/location/popular", nil)
   posts := LatestPostsResponse{}
@@ -304,7 +215,7 @@ func (g *Godel) GetMostPopularPosts() []SinglePostResponse  {
   return posts.Posts
 }
 
-//GetMostDiscussedPosts get top posts for current location
+//GetMostDiscussedPosts get most discussed posts for the current location
 func (g *Godel) GetMostDiscussedPosts(pagination interface{}) []SinglePostResponse  {
   response := g.get("posts/location/discussed", pagination)
   posts := LatestPostsResponse{}
@@ -322,7 +233,7 @@ func (g *Godel) GetMyPosts() []SinglePostResponse {
   return posts.Posts
 }
 
-//GetMyPinnedPosts returns a list of your own posts
+//GetMyPinnedPosts returns a list of your pinned posts
 func (g *Godel) GetMyPinnedPosts() []SinglePostResponse {
   response := g.get("posts/mine/pinned", nil)
   posts := LatestPostsResponse{}
@@ -352,7 +263,7 @@ func (g *Godel) GetMyMostDiscussedPosts() []SinglePostResponse {
 
 //GetMyRepliedPosts returns a list of posts you've replied to
 func (g *Godel) GetMyRepliedPosts() []SinglePostResponse  {
-  response := g.get("posts/mine/replies/", nil)
+  response := g.get("posts/mine/replies", nil)
   post := LatestPostsResponse{}
   response.JSON(&post)
 
@@ -361,7 +272,7 @@ func (g *Godel) GetMyRepliedPosts() []SinglePostResponse  {
 
 //GetMyVotedPosts returns a list of posts you've replied to
 func (g *Godel) GetMyVotedPosts() []SinglePostResponse  {
-  response := g.get("posts/mine/voted/", nil)
+  response := g.get("posts/mine/voted", nil)
   post := LatestPostsResponse{}
   response.JSON(&post)
 
@@ -370,7 +281,7 @@ func (g *Godel) GetMyVotedPosts() []SinglePostResponse  {
 
 //GetMyPostsCombo returns a list of your last posts, your votes and comments
 func (g *Godel) GetMyPostsCombo() ComboPosts  {
-  response := g.get("posts/mine/combo/", nil)
+  response := g.get("posts/mine/combo", nil)
   post := ComboPosts{}
   response.JSON(&post)
 
@@ -421,25 +332,19 @@ func (g *Godel) DownvotePost(postid string) SinglePostResponse  {
 }
 
 //PinPost upvote a selected Post
-func (g *Godel) PinPost(postid string) SinglePostResponse  {
+func (g *Godel) PinPost(postid string) bool  {
   response := g.put("posts/"+postid+"/pin", nil)
-  post := VoteResponse{}
-  response.JSON(&post)
-
-  return post.Post
+return response.Ok
 }
 
 //UnpinPost upvote a selected Post
-func (g *Godel) UnpinPost(postid string) SinglePostResponse  {
+func (g *Godel) UnpinPost(postid string) bool  {
   response := g.put("posts/"+postid+"/unpin", nil)
-  post := VoteResponse{}
-  response.JSON(&post)
-
-  return post.Post
+  return response.Ok
 }
 
 //SendPost creates a new Jodel Post
-func (g *Godel) SendPost(message, color string) {
+func (g *Godel) SendPost(message, color string) bool {
   payload := NewPost{
     color,
     g.Location,
@@ -447,7 +352,7 @@ func (g *Godel) SendPost(message, color string) {
   }
 
   response := g.post("posts/", payload)
-  fmt.Println(response.String())
+  return response.Ok
 }
 
 //SendReply allows you to reply to a post
