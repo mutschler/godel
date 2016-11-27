@@ -10,6 +10,8 @@ import (
   "crypto/sha1"
   "github.com/google/go-querystring/query"
   "strings"
+  "path"
+  "os"
 )
 
 const clientID = "81e8a76e-1e02-4d17-9ba0-8a7020261b26";
@@ -40,12 +42,13 @@ type Godel struct {
   RefreshToken string
   DistinctID string
   Location Location
+  Debug bool
+  DownloadDir string
 }
 
 //NewClient create a new Godel Client, if no deviceuid is given a random one will be created
 func NewClient(deviceuid string) (_ *Godel) {
   uid := NewDeviceUID()
-  //TODO: fix this: if empty generate new Device!!!
   if deviceuid != "" {
     uid = deviceuid
   }
@@ -57,7 +60,7 @@ func NewClient(deviceuid string) (_ *Godel) {
 
 //NewDeviceUID creates a new DeviceUID use this, or create your own 63 char rand string
 func NewDeviceUID() (uid string) {
-  b := make([]byte, 63) // create ne 63 letter string
+  b := make([]byte, 63) // create new 63 letter string
   for i := range b {
     b[i] = runes[rand.Int63() % int64(len(runes))]
   }
@@ -69,8 +72,6 @@ func signRequest(body, url, auth, method string) (hmacresult, ts string) {
   timestamp := time.Now().UTC().Format(time.RFC3339)
   parameters := ""
   message := method + "%" + "api.go-tellm.com" + "%" + "443" + "%/api/v2/" + url + "%" + auth + "%" + timestamp + "%" + parameters + "%" + body
-
-  // fmt.Println(message)
 
   mac := hmac.New(sha1.New, []byte("aPLFAjyUusVPHgcgvlAxihthmRaiuqCjBsRCPLan"))
 	mac.Write([]byte(message))
@@ -92,6 +93,13 @@ func (g *Godel) sendRequest(endpoint string, parameters interface{}, payload int
   if err != nil {
       fmt.Println("error ", err)
   }
+
+  if g.Debug {
+    fmt.Printf("Requst URL: %s\n", url)
+    fmt.Printf("Requst MODE: %s\n", method)
+    fmt.Printf("Requst Data: %s\n", payloadString)
+  }
+
 
   //sign the request using stringified request and hmac
   hmac, timestamp := signRequest(string(payloadString), endpoint, g.AccessToken, method)
@@ -122,9 +130,30 @@ func (g *Godel) sendRequest(endpoint string, parameters interface{}, payload int
       fmt.Println("Unable to make request: ", err)
   }
 
-  fmt.Println(resp.StatusCode)
-  fmt.Println(resp.String())
-  fmt.Println(resp.Header)
+  if g.Debug {
+    fmt.Printf("Status Code: %d\n", resp.StatusCode)
+    fmt.Printf("Response Headers: %v\n", resp.Header)
+    fmt.Printf("Response Content: %s\n", resp.String())
+  }
+
+  if g.DownloadDir != "" {
+    filePath := path.Join(g.DownloadDir, endpoint, "data.json")
+    if g.Debug {
+      fmt.Printf("Download option active, downloading response to: %s\n", filePath)
+    }
+    os.MkdirAll(path.Join(g.DownloadDir, endpoint), os.ModePerm)
+    f, err := os.Create(filePath)
+
+    defer f.Close()
+
+    if err != nil {
+      fmt.Println("error creating file ", err)
+    }
+
+    f.WriteString(resp.String())
+
+  }
+
   return resp
 }
 
@@ -272,7 +301,7 @@ func (g *Godel) GetMyRepliedPosts() []SinglePostResponse  {
 
 //GetMyVotedPosts returns a list of posts you've replied to
 func (g *Godel) GetMyVotedPosts() []SinglePostResponse  {
-  response := g.get("posts/mine/voted", nil)
+  response := g.get("posts/mine/votes", nil)
   post := LatestPostsResponse{}
   response.JSON(&post)
 
