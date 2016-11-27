@@ -34,6 +34,7 @@ type SingleComment struct {
   VoteCount int64 `json:"vote_count"` // how many upvotes
 }
 
+
 // SinglePostResponse holds the response for one single Post
 type SinglePostResponse struct {
   ChildCount int64 `json:"child_count"` // count of replys
@@ -44,12 +45,15 @@ type SinglePostResponse struct {
   DiscoveredBy int64 `json:"discovered_by"` // unknown
   Distance int64 `json:"distance"` // distance to current location
   GotThanks bool `json:"got_thanks"` // bool
+  ImageApproved bool `json:"image_approved"` // true or false
+  ImageURL string `json:"image_url"` // image URL if it's an image post
   Location Location `json:"location"` // Location
   Message string `json:"message"` // the message
   NotificationsEnabled bool `json:"notifications_enabled"` // notifications for new replys
   PinCount int64 `json:"pin_count"` // how many pins
   PostID string `json:"post_id"` // the unique postID
   PostOwn string `json:"post_own"` // own if own post else friend
+  ThumbnailURL string `json:"thumbnail_url"` // url of image thumbnail
   UpdatedAt string `json:"updated_at"` // ISO Timestamp
   UserHandle string `json:"user_handle"` // the user handle of the poster
   VoteCount int64 `json:"vote_count"` // how many upvotes
